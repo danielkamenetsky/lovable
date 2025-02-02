@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 
 const MatrixRain = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -10,32 +10,56 @@ const MatrixRain = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Japanese recipe characters (sushi recipe)
-    const recipe = "寿司 米 酢 塩 砂糖 海苔 わさび 生姜";
-    const characters = recipe.split("");
+    // More varied characters for authentic Matrix look
+    const katakana = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン";
+    const latin = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const nums = "0123456789";
+    const characters = (katakana + latin + nums).split("");
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
+    const fontSize = 20;
+    const columns = Math.ceil(canvas.width / fontSize);
 
-    const drops: number[] = [];
-    for (let i = 0; i < columns; i++) {
-      drops[i] = 1;
-    }
+    // Initialize drops at random positions above the screen
+    const drops = Array(columns).fill(0).map(() => -Math.floor(Math.random() * 100));
+    
+    // Track character change timing for each column
+    const changeChar = Array(columns).fill(0);
+    
+    // Store current character for each position
+    const currentChars = Array(columns).fill('');
 
     const draw = () => {
-      ctx.fillStyle = "rgba(13, 2, 8, 0.05)";
+      // Darker fade effect for better contrast
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "#00FF41";
+      // Brighter green for better visibility
+      ctx.fillStyle = "#0F0";
       ctx.font = `${fontSize}px monospace`;
 
       for (let i = 0; i < drops.length; i++) {
-        const char = characters[Math.floor(Math.random() * characters.length)];
-        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        // Change character periodically for each column
+        if (Math.random() > 0.98 || !currentChars[i]) {
+          currentChars[i] = characters[Math.floor(Math.random() * characters.length)];
+        }
 
+        // First character in stream is brighter
+        if (drops[i] === 0) {
+          ctx.fillStyle = "#FFF";
+        } else {
+          ctx.fillStyle = "#0F0";
+        }
+
+        ctx.fillText(
+          currentChars[i],
+          i * fontSize,
+          drops[i] * fontSize
+        );
+
+        // Reset with random delay when reaching bottom
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
         }
@@ -61,7 +85,7 @@ const MatrixRain = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full -z-10 opacity-50"
+      className="fixed top-0 left-0 w-full h-full -z-10"
     />
   );
 };
